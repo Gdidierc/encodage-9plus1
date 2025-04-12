@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>📋 Suivi des magasins 9+1</title>
+<style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #F2F4FA; padding: 20px; }
+    h2 { background-color: #D0CDD7; color: #0B3948; padding: 15px; border-radius: 10px; text-align: center; }
+    .controls, .form-popup, .modal { margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { border: 1px solid #D0CDD7; padding: 10px; text-align: center; }
+    th { background-color: #ACB0BD; color: #0B3948; }
+    tr:hover { background-color: #f1f1f1; cursor: pointer; }
+    button { background-color: #0B3948; color: white; padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; margin-right: 10px; }
+    button:hover { background-color: #416165; }
+    .modal { display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%); z-index: 1000; background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.2); width: 90%; max-width: 1200px; max-height: 80%; overflow: auto; }
+    .modal h3 { margin-top: 0; }
+    .close-modal { float: right; cursor: pointer; color: red; font-size: 20px; font-weight: bold; }
+    .form-popup input, .form-popup select { margin-right: 10px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+  
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ACB0BD;
+  background-color: #F8FAFC;
+  color: #0B3948;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+
+td.oui {
+  background-color: #d6f5d6 !important;
+}
+
+tr.valid {
+  background-color: #d6f5d6 !important;
+}
+</style>
+</head>
+<body>
+<!-- Ajout d'une entête fun et intuitive au fichier HTML -->
+<div style="padding: 20px; border-radius: 10px; margin-bottom: 20px; background-color: #F2F4FA; font-family: 'Segoe UI', sans-serif; color: #0B3948;">
+<div style="text-align: center; margin: 0;">
+<img alt="GoldCheck 9+1 By Grégoire - Nouveau logo" src="ChatGPT Image 10 avr. 2025, 20_47_27.png" style="width: 30%; height: auto; border-radius: 10px; display: block; margin: 4px auto;"/>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding-top: 15px; font-size: 0.95rem;">
+<div style="background-color: #FFFFFF; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">🧾 <strong id="nbTotal">-</strong><br/>magasins encodés</div>
+<div style="background-color: #FFFFFF; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">✅ <strong id="percentVerifies">-</strong>%<br/>vérifiés</div>
+<div style="background-color: #FFFFFF; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">📬 <strong id="percentEmails">-</strong>%<br/>emails reçus</div>
+<div style="background-color: #FFFFFF; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">🚫 <strong id="nbSansEncodage">-</strong><br/>sans encodage</div>
+<div style="background-color: #FFFFFF; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">📉 Moyenne d'écart : <br/><strong id="moyenneEcart">-</strong></div>
+<div style="background-color: #FFFFFF; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">📈 Positifs : <strong id="nbEcartPos">-</strong><br/>Négatifs : <strong id="nbEcartNeg">-</strong></div>
+</div>
+</div>
+<div class="controls" style="display: flex; justify-content: space-between; align-items: center;">
+<div>
+<button onclick="ouvrirFormulaire()">➕ Ajouter un magasin</button>
+<button onclick="exporterTousLesMagasins()">📤 Exporter tous les magasins (Excel)</button>
+</div>
+<div>
+<button onclick="demanderCode()">🧼 Réinitialiser tout</button>
+</div>
+</div>
+<input id="rechercheMagasin" onkeyup="filtrerTableau()" placeholder="🔍 Rechercher un magasin, société, numéro..." style="margin-bottom: 10px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; width: 100%; font-size: 1rem;" type="text"/>
+<table id="tableSuivi">
+<thead>
+<tr>
+<th>Nom société</th>
+<th>Magasin</th>
+<th>N° Société</th>
+<th>Cartes reçues</th>
+<th>Email reçu</th>
+<th>Comptage effectué</th>
+<th>Contrôlé par</th><th>🗑️</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+<div class="modal" id="popupAjout">
+<span class="close-modal" onclick="fermerFormulaire()">×</span>
+<h3 style="margin-bottom: 20px; color: #0B3948;">➕ Ajouter un magasin</h3>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+<div>
+<label style="color: #0B3948;">Nom société :</label><br/>
+<input class="form-input" id="nomSociete" type="text"/><br/>
+<label style="color: #0B3948;">Magasin :</label><br/>
+<input class="form-input" id="magasin" type="text"/><br/>
+<label style="color: #0B3948;">N° Société :</label><br/>
+<input class="form-input" id="numSociete" type="text"/>
+</div>
+<div>
+<label style="color: #0B3948;">Cartes reçues :</label><br/>
+<select class="form-input" id="cartes"><option>Oui</option><option>Non</option></select><br/>
+<label style="color: #0B3948;">Email reçu :</label><br/>
+<select class="form-input" id="email"><option>Oui</option><option>Non</option></select><br/>
+<label style="color: #0B3948;">Comptage :</label><br/>
+<select class="form-input" id="comptage"><option>Oui</option><option>Non</option></select>
+<label style="color: #0B3948;">Contrôlé par :</label><br/><input class="form-input" id="controleur" type="text"/></div>
+</div>
+<div style="margin-top: 20px; text-align: right;">
+<button onclick="ajouterMagasin()">Ajouter</button>
+<button onclick="fermerFormulaire()">Annuler</button>
+</div>
+</div>
+<div class="modal" id="modalDetails">
+<span class="close-modal" onclick="fermerModal()">×</span>
+<h3>Détails du magasin</h3>
+<div id="contenuDetails"></div>
+<button id="boutonAjouterViaFormulaire">➕ Ajouter via formulaire</button>
+<button onclick="exporterUnMagasin()">📤 Exporter ce magasin (Excel)</button>
+<button onclick="document.getElementById('importExcelInput').click()">📥 Importer depuis Excel</button>
+<input accept=".xlsx,.xls" id="importExcelInput" onchange="importerDepuisExcel(event)" style="display:none" type="file"/>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+function activerModification() {
+  const tableau = document.querySelector("#contenuDetails table");
+  if (!tableau) return;
+
+  const lignes = tableau.querySelectorAll("tbody tr");
+  lignes.forEach((row) => {
+    const cellules = row.querySelectorAll("td");
+    [0, 1, 4, 6, 8].forEach(i => {
+      const oldText = cellules[i].innerText;
+      const input = document.createElement("input");
+      input.className = "form-input";
+      input.value = oldText;
+      cellules[i].innerHTML = "";
+      cellules[i].appendChild(input);
+    });
+
+    // Ajouter bouton 🗑️ si pas déjà là
+    if (cellules.length < 10) {
+      const deleteCell = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.textContent = "🗑️";
+      btn.onclick = () => supprimerLigne(btn);
+      deleteCell.appendChild(btn);
+      row.appendChild(deleteCell);
+    }
+  });
+
+  const bouton = document.querySelector("button[onclick='activerModification()']");
+  bouton.textContent = "💾 Sauvegarder";
+  bouton.onclick = enregistrerModifications;
+}
+
+function enregistrerModifications() {
+  const tableau = document.querySelector("#contenuDetails table");
+  const lignes = tableau.querySelectorAll("tbody tr");
+
+  let historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+  const magasinRef = magasins[indexActuel].societe;
+
+  const nouvellesLignes = [];
+
+  lignes.forEach((row) => {
+    const inputs = row.querySelectorAll("input");
+    if (inputs.length >= 5) {
+      const [societe, magasin, code, qteCentraleInput, commentaireInput] = inputs;
+      const date = row.querySelector("td:nth-child(3)")?.textContent || new Date().toISOString();
+      const commentaireMagasin = row.querySelector("td:nth-child(4)")?.textContent || "";
+      const quantiteMagasin = parseInt(row.querySelector("td:nth-child(6)")?.textContent || "0");
+      const quantiteCentrale = parseInt(qteCentraleInput.value) || 0;
+      const ecart = quantiteCentrale - quantiteMagasin;
+
+      nouvellesLignes.push({
+        nomSociete: societe.value,
+        magasin: magasin.value,
+        code: code.value,
+        quantiteCentral: quantiteCentrale,
+        commentaireCentral: commentaireInput.value,
+        date: date,
+        commentaire: commentaireMagasin,
+        quantiteMag: quantiteMagasin,
+        ecart: ecart
+      });
+    }
+  });
+
+  const reste = historique.filter(l => l.magasin !== magasinRef);
+  const nouveau = reste.concat(nouvellesLignes);
+
+  localStorage.setItem("historique9plus1", JSON.stringify(nouveau));
+  afficherDetails(indexActuel);
+}
+
+
+function supprimerLigne(btn) {
+  const ligne = btn.closest("tr");
+  if (ligne) ligne.remove();
+}
+
+
+function filtrerTableau() {
+  const input = document.getElementById("rechercheMagasin").value.toLowerCase();
+  const rows = document.querySelectorAll("#tableSuivi tbody tr");
+  rows.forEach(row => {
+    const texte = row.innerText.toLowerCase();
+    row.style.display = texte.includes(input) ? "" : "none";
+  });
+}
+
+// Ajout tri en cliquant sur les en-têtes
+document.addEventListener("DOMContentLoaded", () => {
+  const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+  const comparer = (idx, asc) => (a, b) =>
+    ((v1, v2) => v1 !== "" && v2 !== "" && !isNaN(v1) && !isNaN(v2)
+      ? v1 - v2
+      : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+  document.querySelectorAll("#tableSuivi th").forEach(th => {
+    th.style.cursor = "pointer";
+    th.addEventListener("click", (() => {
+      const table = th.closest("table");
+      const tbody = table.querySelector("tbody");
+      Array.from(tbody.querySelectorAll("tr"))
+        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+        .forEach(tr => tbody.appendChild(tr));
+    }));
+  });
+});
+
+</script><script>
+let magasins = JSON.parse(localStorage.getItem("suiviMagasins9plus1") || "[]");
+let indexActuel = -1;
+const tableBody = document.querySelector("#tableSuivi tbody");
+
+function ouvrirFormulaire() { document.getElementById("popupAjout").style.display = "block"; }
+function fermerFormulaire() { document.getElementById("popupAjout").style.display = "none"; }
+function afficherMagasins() {
+  tableBody.innerHTML = "";
+  magasins.forEach((m, i) => {
+    const row = document.createElement("tr");
+    
+    const isValid = m.cartes === 'Oui' && m.email === 'Oui' && m.comptage === 'Oui';
+    row.className = isValid ? 'valid' : '';
+    row.innerHTML = `<td>${m.nom}</td>` +
+                  `<td>${m.magasin}</td>` +
+                  `<td>${m.societe}</td>` +
+                  `<td>${m.cartes}</td>` +
+                  `<td>${m.email}</td>` +
+                  `<td>${m.comptage}</td>` +
+                  `<td>${m.controleur || ''}</td>` +
+                  `<td><button onclick='supprimerMagasin(${i})'>🗑️</button></td>`;
+    row.querySelectorAll("td").forEach((cell, j) => { if (j < 6) cell.onclick = () => afficherDetails(i); });
+    tableBody.appendChild(row);
+  });
+}
+
+function ajouterMagasin() {
+  const nouveau = {
+    nom: document.getElementById("nomSociete").value,
+    magasin: document.getElementById("magasin").value,
+    societe: document.getElementById("numSociete").value,
+    cartes: document.getElementById("cartes").value,
+    email: document.getElementById("email").value,
+    comptage: document.getElementById("comptage").value
+  };
+  magasins.push(nouveau);
+  localStorage.setItem("suiviMagasins9plus1", JSON.stringify(magasins));
+  fermerFormulaire();
+  afficherMagasins();
+}
+
+function supprimerMagasin(index) {
+  if (confirm("Êtes-vous sûr de vouloir supprimer ce magasin ?")) {
+    magasins.splice(index, 1);
+    localStorage.setItem("suiviMagasins9plus1", JSON.stringify(magasins));
+    afficherMagasins();
+  }
+}
+
+function afficherDetails(index) {
+  indexActuel = index;
+  const m = magasins[index];
+  document.getElementById("contenuDetails").innerHTML = `
+    <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px;'>
+      <div>
+        <label style="color: #0B3948;">Nom société :</label><br>
+        <input type="text" class="form-input" value="${m.nom}" onchange="majChamps(this, 'nom')"><br>
+        <label style="color: #0B3948;">Magasin :</label><br>
+        <input type="text" class="form-input" value="${m.magasin}" onchange="majChamps(this, 'magasin')"><br>
+        <label style="color: #0B3948;">N° Société :</label><br>
+        <input type="text" class="form-input" value="${m.societe}" onchange="majChamps(this, 'societe')">
+<label style="color: #0B3948;">Contrôlé par :</label><br>
+<input type="text" class="form-input" value="${m.controleur || ''}" onchange="majChamps(this, 'controleur')"><br>
+      </div>
+      <div>
+        <label style="color: #0B3948;">Cartes reçues :</label><br>
+        <select class="form-input" onchange="majChamps(this, 'cartes')">
+          <option ${m.cartes==='Oui'?'selected':''}>Oui</option>
+          <option ${m.cartes==='Non'?'selected':''}>Non</option>
+        </select><br>
+        <label style="color: #0B3948;">Email reçu :</label><br>
+        <select class="form-input" onchange="majChamps(this, 'email')">
+          <option ${m.email==='Oui'?'selected':''}>Oui</option>
+          <option ${m.email==='Non'?'selected':''}>Non</option>
+        </select><br>
+        <label style="color: #0B3948;">Comptage effectué :</label><br>
+        <select class="form-input" onchange="majChamps(this, 'comptage')">
+          <option ${m.comptage==='Oui'?'selected':''}>Oui</option>
+          <option ${m.comptage==='Non'?'selected':''}>Non</option>
+        </select>
+      </div>
+    </div>
+    <h4 style="margin-top: 30px;">🧾 Articles encodés : <button onclick='activerModification()'>✏️ Modifier</button></h4>
+    ${afficherArticles(m.societe)}
+  `;
+  document.getElementById("boutonAjouterViaFormulaire").onclick = () => {
+    const url = `index.html?magasin=${encodeURIComponent(m.magasin)}`;
+    window.open(url);
+  };
+  document.getElementById("modalDetails").style.display = "block";
+}
+
+function majChamps(element, champ) {
+  magasins[indexActuel][champ] = element.value;
+  localStorage.setItem("suiviMagasins9plus1", JSON.stringify(magasins));
+  afficherMagasins();
+}
+
+function afficherArticles(numSociete) {
+  const historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+  const lignes = historique.filter(l => l.magasin === numSociete);
+  if (lignes.length === 0) return "<p>Aucun encodage trouvé pour ce magasin.</p>";
+  let html = `<table><thead><tr><th>NOM SOCIETE</th><th>MAGASIN</th><th>DATE DE LA DEMANDE</th><th>COMMENTAIRE MAGASIN</th><th>CODES GOLD</th><th>QUANTITES MAGASIN</th><th>QUANTITES CONTROLEES</th><th>Ecart</th><th>COMMENTAIRE TC</th></tr></thead><tbody>`;
+  lignes.forEach(l => {
+    html += `<tr><td>${l.nomSociete}</td><td>${l.magasin}</td><td>${l.date.split("T")[0]}</td><td>${l.commentaire}</td><td>${l.code}</td><td>${l.quantiteMag}</td><td>${l.quantiteCentral}</td><td>${l.ecart}</td><td>${l.commentaireCentral || ""}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  return html;
+}
+
+function exporterTousLesMagasins() {
+  const historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+  if (historique.length === 0) {
+    alert("Aucun article à exporter.");
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(historique);
+  XLSX.utils.book_append_sheet(wb, ws, "Tous les articles");
+  XLSX.writeFile(wb, "Articles_Tous_Les_Magasins.xlsx");
+}
+
+function exporterUnMagasin() {
+  const m = magasins[indexActuel];
+  const historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+  const lignes = historique.filter(l => l.magasin === m.societe);
+  if (lignes.length === 0) {
+    alert("Aucune donnée à exporter pour ce magasin.");
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(lignes);
+  XLSX.utils.book_append_sheet(wb, ws, m.magasin || "Magasin");
+  XLSX.writeFile(wb, `Encodages_${m.magasin || "Magasin"}.xlsx`);
+}
+
+function fermerModal() {
+  document.getElementById("modalDetails").style.display = "none";
+}
+
+window.onload = afficherMagasins;
+
+function activerModification() {
+  const tableau = document.querySelector("#contenuDetails table");
+  if (!tableau) return;
+
+  const lignes = tableau.querySelectorAll("tbody tr");
+  lignes.forEach((row) => {
+    const cellules = row.querySelectorAll("td");
+    [0, 1, 4, 6, 8].forEach(i => {
+      const oldText = cellules[i].innerText;
+      const input = document.createElement("input");
+      input.className = "form-input";
+      input.value = oldText;
+      cellules[i].innerHTML = "";
+      cellules[i].appendChild(input);
+    });
+
+    // Ajouter bouton 🗑️ si pas déjà là
+    if (cellules.length < 10) {
+      const deleteCell = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.textContent = "🗑️";
+      btn.onclick = () => supprimerLigne(btn);
+      deleteCell.appendChild(btn);
+      row.appendChild(deleteCell);
+    }
+  });
+
+  const bouton = document.querySelector("button[onclick='activerModification()']");
+  bouton.textContent = "💾 Sauvegarder";
+  bouton.onclick = enregistrerModifications;
+}
+
+function enregistrerModifications() {
+  const tableau = document.querySelector("#contenuDetails table");
+  const lignes = tableau.querySelectorAll("tbody tr");
+
+  let historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+  const magasinRef = magasins[indexActuel].societe;
+
+  const nouvellesLignes = [];
+
+  lignes.forEach((row) => {
+    const inputs = row.querySelectorAll("input");
+    if (inputs.length >= 5) {
+      const [societe, magasin, code, qteCentraleInput, commentaireInput] = inputs;
+      const date = row.querySelector("td:nth-child(3)")?.textContent || new Date().toISOString();
+      const commentaireMagasin = row.querySelector("td:nth-child(4)")?.textContent || "";
+      const quantiteMagasin = parseInt(row.querySelector("td:nth-child(6)")?.textContent || "0");
+      const quantiteCentrale = parseInt(qteCentraleInput.value) || 0;
+      const ecart = quantiteCentrale - quantiteMagasin;
+
+      nouvellesLignes.push({
+        nomSociete: societe.value,
+        magasin: magasin.value,
+        code: code.value,
+        quantiteCentral: quantiteCentrale,
+        commentaireCentral: commentaireInput.value,
+        date: date,
+        commentaire: commentaireMagasin,
+        quantiteMag: quantiteMagasin,
+        ecart: ecart
+      });
+    }
+  });
+
+  const reste = historique.filter(l => l.magasin !== magasinRef);
+  const nouveau = reste.concat(nouvellesLignes);
+
+  localStorage.setItem("historique9plus1", JSON.stringify(nouveau));
+  afficherDetails(indexActuel);
+}
+
+
+function supprimerLigne(btn) {
+  const ligne = btn.closest("tr");
+  if (ligne) ligne.remove();
+}
+
+
+function filtrerTableau() {
+  const input = document.getElementById("rechercheMagasin").value.toLowerCase();
+  const rows = document.querySelectorAll("#tableSuivi tbody tr");
+  rows.forEach(row => {
+    const texte = row.innerText.toLowerCase();
+    row.style.display = texte.includes(input) ? "" : "none";
+  });
+}
+
+// Ajout tri en cliquant sur les en-têtes
+document.addEventListener("DOMContentLoaded", () => {
+  const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+
+  const comparer = (idx, asc) => (a, b) =>
+    ((v1, v2) => v1 !== "" && v2 !== "" && !isNaN(v1) && !isNaN(v2)
+      ? v1 - v2
+      : v1.toString().localeCompare(v2)
+    )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+
+  document.querySelectorAll("#tableSuivi th").forEach(th => {
+    th.style.cursor = "pointer";
+    th.addEventListener("click", (() => {
+      const table = th.closest("table");
+      const tbody = table.querySelector("tbody");
+      Array.from(tbody.querySelectorAll("tr"))
+        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+        .forEach(tr => tbody.appendChild(tr));
+    }));
+  });
+});
+
+</script>
+<script>
+function mettreAJourStatistiques() {
+  const magasins = JSON.parse(localStorage.getItem("suiviMagasins9plus1") || "[]");
+  const historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+
+  document.getElementById("nbTotal").textContent = magasins.length;
+
+  const verifiés = magasins.filter(m => m.comptage === "Oui").length;
+  const pctVerifiés = magasins.length ? Math.round((verifiés / magasins.length) * 100) : 0;
+  document.getElementById("percentVerifies").textContent = pctVerifiés;
+
+  const emails = magasins.filter(m => m.email === "Oui").length;
+  const pctEmails = magasins.length ? Math.round((emails / magasins.length) * 100) : 0;
+  document.getElementById("percentEmails").textContent = pctEmails;
+
+  const socCodes = historique.map(l => l.magasin);
+  const sansEncodage = magasins.filter(m => !socCodes.includes(m.societe)).length;
+  document.getElementById("nbSansEncodage").textContent = sansEncodage;
+
+  const ecarts = historique.map(l => Number(l.ecart)).filter(e => !isNaN(e));
+  const moyenne = ecarts.length ? (ecarts.reduce((a,b) => a+b, 0) / ecarts.length).toFixed(2) : "-";
+  document.getElementById("moyenneEcart").textContent = moyenne;
+
+  const positifs = ecarts.filter(e => e > 0).length;
+  const négatifs = ecarts.filter(e => e < 0).length;
+  document.getElementById("nbEcartPos").textContent = positifs;
+  document.getElementById("nbEcartNeg").textContent = négatifs;
+}
+
+const oldLoad = window.onload;
+window.onload = function() {
+  if (oldLoad) oldLoad();
+  mettreAJourStatistiques();
+};
+</script>
+<script>
+function importerDepuisExcel(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet);
+
+    const historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+    const m = magasins[indexActuel];
+    const nouveau = json.map(ligne => {
+      const ecart = (ligne["QUANTITES CONTROLEES"] || ligne["Qté central"] || 0 || 0) - (ligne["QUANTITES MAGASIN"] || ligne["Qté magasin"] || 0 || 0);
+      return {
+        nomSociete: ligne["NOM SOCIETE"] || ligne["Nom société"] || m.nom || m.nom,
+        magasin: ligne["MAGASIN"] || ligne["Magasin"] || m.magasin || m.magasin,
+        date: ligne["DATE DE LA DEMANDE"] || ligne["Date encodage"] || new Date().toISOString() || new Date().toISOString(),
+        commentaire: ligne["COMMENTAIRE MAGASIN"] || ligne["Commentaire"] || "" || "",
+        code: ligne["CODES GOLD"] || ligne["Code Gold"] || "" || "",
+        quantiteMag: ligne["QUANTITES MAGASIN"] || ligne["Qté magasin"] || 0 || 0,
+        quantiteCentral: ligne["QUANTITES CONTROLEES"] || ligne["Qté central"] || 0 || 0,
+        ecart: ecart,
+        commentaireCentral: ligne["COMMENTAIRE TC"] || ligne["Commentaire central"] || "" || ""
+      };
+    });
+
+    const fusion = historique.concat(nouveau);
+    localStorage.setItem("historique9plus1", JSON.stringify(fusion));
+    afficherDetails(indexActuel);
+  };
+  reader.readAsArrayBuffer(file);
+}
+</script>
+<script>
+function demanderCode() {
+  const code = prompt("Veuillez entrer le code de sécurité pour réinitialiser toutes les données :");
+  if (code === "444719") {
+    localStorage.removeItem("suiviMagasins9plus1");
+    localStorage.removeItem("historique9plus1");
+    alert("Toutes les données ont été supprimées !");
+    location.reload();
+  } else {
+    alert("Code incorrect. Réinitialisation annulée.");
+  }
+}
+</script>
+
+<!-- 📦 Bouton de vérification de l'espace localStorage -->
+<div style="text-align: center; margin-top: 40px;">
+  <button onclick="verifierTailleLocalStorage()">📦 Vérifier l’espace utilisé dans le navigateur</button>
+</div>
+
+<script>
+function verifierTailleLocalStorage() {
+  const donnees = JSON.stringify(localStorage);
+  const tailleOctets = new Blob([donnees]).size;
+  const tailleMo = tailleOctets / (1024 * 1024);
+  const pourcentage = Math.round((tailleOctets / (5 * 1024 * 1024)) * 100);
+  alert(`📦 Espace utilisé : ${tailleMo.toFixed(2)} Mo (${pourcentage} % des 5 Mo autorisés)`);
+}
+</script>
+
+<!-- 📤 Bouton d'export + suppression localStorage -->
+<div style="text-align: center; margin-top: 20px;">
+  <button onclick="exporterEtVider()">📤 Exporter les données en JSON et vider le navigateur</button>
+</div>
+
+<script>
+function exporterEtVider() {
+  const data = {
+    historique: JSON.parse(localStorage.getItem("historique9plus1") || "[]"),
+    magasins: JSON.parse(localStorage.getItem("suiviMagasins9plus1") || "[]")
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "backup_9plus1.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  localStorage.removeItem("historique9plus1");
+  localStorage.removeItem("suiviMagasins9plus1");
+  alert("✅ Données exportées et supprimées du navigateur.");
+  location.reload();
+}
+</script>
+
+<!-- 📥 Bouton d'import JSON -->
+<div style="text-align: center; margin-top: 20px;">
+  <input type="file" id="importJsonFile" accept=".json" style="display: none;" onchange="importerDepuisJson(event)">
+  <button onclick="document.getElementById('importJsonFile').click()">📥 Importer des données depuis un fichier JSON</button>
+</div>
+
+<script>
+function importerDepuisJson(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.historique && data.magasins) {
+        localStorage.setItem("historique9plus1", JSON.stringify(data.historique));
+        localStorage.setItem("suiviMagasins9plus1", JSON.stringify(data.magasins));
+        alert("✅ Données importées avec succès !");
+        location.reload();
+      } else {
+        alert("❌ Le fichier JSON ne contient pas les bonnes données.");
+      }
+    } catch (err) {
+      alert("❌ Erreur lors de la lecture du fichier JSON.");
+    }
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+
+
+
+</html>
