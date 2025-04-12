@@ -1,0 +1,996 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<title>Encodage Grégoire+1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+    * {
+      font-family: inherit;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #F2F4FA;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #0B3948;
+      background-color: #D0CDD7;
+      padding: 20px;
+      margin: 0;
+      font-size: 2.5rem;
+    }
+    .container {
+      padding: 20px;
+    }
+    .card {
+      background-color: #FFFFFF;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: 500;
+      color: #0B3948;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      max-width: 300px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ACB0BD;
+      background-color: #F8FAFC;
+      margin-bottom: 10px;
+      color: #0B3948;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    input.table-input {
+      max-width: 150px;
+      padding: 6px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .statistiques {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #416165;
+      text-align: right;
+    }
+    .statistiques span {
+      display: block;
+    }
+    button {
+      background-color: #0B3948;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px 5px 5px 0;
+      font-weight: 500;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    button:hover {
+      background-color: #416165;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-family: 'Segoe UI', sans-serif;
+      table-layout: auto;
+      width: 100%;
+      word-wrap: break-word;
+      font-size: 0.85rem;
+    }
+    th, td {
+      padding: 6px 8px;
+      border: 1px solid #D0CDD7;
+      text-align: center;
+      color: #0B3948;
+      font-size: 0.85rem;
+    }
+    th {
+      background-color: #ACB0BD;
+      color: #0B3948;
+    }
+    th:nth-child(5), th:nth-child(6), th:nth-child(7), td:nth-child(5), td:nth-child(6), td:nth-child(7) {
+      width: 60px;
+    }
+    td:nth-child(9) input[type="text"] {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .flex-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: nowrap;
+    }
+    .flex-child.central {
+      flex: 1;
+      max-width: 33%;
+    }
+    .flex-child.comparaison {
+      flex: 2;
+      max-width: 67%;
+    }
+    .comparaison-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .comparaison-header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .row-green {
+      background-color: #C8E6D6;
+      color: #0B3948;
+    }
+    .row-red {
+      background-color: #F5C6C6;
+      color: #0B3948;
+    }
+  
+#comparaisonTable td:nth-child(n+10),
+#comparaisonTable th:nth-child(n+10) {
+  display: none !important;
+}
+
+
+.upload-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 20px;
+  border-radius: 12px;
+  background-color: #E8EBF5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+.upload-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.upload-label {
+  font-weight: 600;
+  color: #0B3948;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.upload-label i {
+  font-style: normal;
+}
+.upload-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #F8FAFC;
+  border: 1px solid #ACB0BD;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 42px;
+}
+.upload-wrapper input[type="file"] {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  cursor: pointer;
+}
+.upload-button {
+  padding: 10px 14px;
+  background: #0B3948;
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-right: 1px solid #ACB0BD;
+  border-radius: 8px 0 0 8px;
+}
+.upload-filename {
+  padding: 0 12px;
+  color: #416165;
+  font-size: 0.85rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+</style>
+</head>
+<body>
+<div style="text-align: center; margin: 10px 0;">
+  <img src="ChatGPT Image 10 avr. 2025, 20_47_27.png" alt="GoldCheck 9+1" style="width: 20%; height: auto; border-radius: 10px; display: block; margin: 0 auto;">
+</div>
+<div class="container">
+
+<div class="upload-card">
+  <div class="upload-group">
+    <label class="upload-label" for="fichierEligibles">📂 Importer liste des articles 9+1 :</label>
+    <div class="upload-wrapper">
+      <span class="upload-button">Choisir un fichier</span>
+      <span id="nomFichierEligibles" class="upload-filename">Aucun fichier choisi</span>
+      <input type="file" id="fichierEligibles" accept=".xlsx" />
+    </div>
+  </div>
+  <div class="upload-group">
+    <label class="upload-label" for="fichierExcel">📂 Importer fichier Excel du magasin :</label>
+    <div class="upload-wrapper">
+      <span class="upload-button">Choisir un fichier</span>
+      <span id="nomFichierExcel" class="upload-filename">Aucun fichier choisi</span>
+      <input type="file" id="fichierExcel" accept=".xlsx" />
+    </div>
+  </div>
+</div>
+<div class="card" style="display:flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
+<div style="flex: 1;">
+<label for="codeGold">Code Gold :</label>
+<input id="codeGold" maxlength="20" type="text"/>
+<button onclick="ouvrirRechercheArticle()">🔍 Rechercher un article</button>
+<div id="infoArticle" style="margin-top: 10px; padding: 10px; border-radius: 10px; background-color: #f4f4f4; color: #0B3948; font-size: 0.9rem;"></div>
+<label for="quantite">Quantité :</label>
+<input id="quantite" maxlength="20" type="number"/>
+<button onclick="ajouter()">➕ Ajouter</button>
+</div>
+<div style="flex: 1;">
+<div class="statistiques">
+<span>% Articles en positif : <span id="pourcentagePositif">-</span></span>
+<span>Lignes manquantes : <span id="lignesManquantes">-</span></span>
+<span>Articles manquants : <span id="articlesManquants">-</span></span>
+</div>
+</div>
+</div>
+<div class="flex-container">
+<div class="flex-child card central">
+<h3 style="color:#0B3948; font-family:'Segoe UI', sans-serif;">📝 Encodage central</h3>
+<table id="tableau">
+<thead>
+<tr><th>Magasin</th><th>Code Gold</th><th>Quantité</th></tr>
+</thead>
+<tbody>
+<!-- Les cases à cocher seront ajoutées dynamiquement en JS si modificationActive est true --></tbody>
+</table>
+</div>
+<div class="flex-child card comparaison">
+<div class="comparaison-header">
+<h3 style="color:#0B3948; font-family:'Segoe UI', sans-serif;">📊 Comparaison en direct</h3>
+<div class="comparaison-header-buttons">
+<button onclick="resetTable()">♻️ Réinitialiser</button>
+<button onclick="modifierInfosMagasin()">✏️ Modifier</button>
+<button onclick="enregistrerEncodage()">💾 Enregistrer</button>
+
+</div>
+</div>
+<table id="comparaisonTable">
+<thead>
+<tr>
+<th>Nom société</th><th>Magasin</th><th>Date d'encodage</th><th>Commentaire</th><th>Code Gold</th><th>Qté magasin</th><th>Qté central</th><th>Écart</th><th>Commentaire central</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</div>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+
+document.getElementById("fichierEligibles").addEventListener("change", function(e) {
+  document.getElementById("nomFichierEligibles").textContent = e.target.files[0]?.name || "Aucun fichier choisi";
+});
+document.getElementById("fichierExcel").addEventListener("change", function(e) {
+  document.getElementById("nomFichierExcel").textContent = e.target.files[0]?.name || "Aucun fichier choisi";
+});
+
+  const fichierExcel = document.getElementById("fichierExcel");
+  const codeGoldInput = document.getElementById("codeGold");
+  const quantiteInput = document.getElementById("quantite");
+
+  const fichierEligibles = document.getElementById("fichierEligibles");
+  let articlesEligibles = [];
+try {
+  articlesEligibles = JSON.parse(localStorage.getItem("articlesEligibles9plus1") || "[]");
+} catch (e) {
+  articlesEligibles = [];
+}
+
+  fichierEligibles.addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      articlesEligibles = json.map(ligne => ({
+        gold: ligne["GOLD"]?.toString().trim() || "",
+        ean: ligne["Ref. Fournisseur"]?.toString().trim() || "",
+        libelle: ligne["Libellé caisse FR"]?.toString().trim() || "",
+        marque: ligne["Marque"]?.toString().trim() || "",
+        pg: ligne["PG (DC)"]?.toString().trim() || "",
+        category: ligne["Category Description"]?.toString().trim() || "",
+        poids: ligne["SKU Net Content"]?.toString().trim() || ""
+      }));
+      localStorage.setItem("articlesEligibles9plus1", JSON.stringify(articlesEligibles));
+      alert("✅ Liste des articles 9+1 bien importée.");
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  codeGoldInput.addEventListener("input", function () {
+
+    
+
+    const codeGold = codeGoldInput.value.trim();
+    const infoDiv = document.getElementById("infoArticle");
+    if (!codeGold || articlesEligibles.length === 0) {
+      infoDiv.innerHTML = "";
+      return;
+    }
+    const article = articlesEligibles.find(a =>
+      a.gold === codeGold || a.ean === codeGold
+    );
+    if (article) {
+      infoDiv.innerHTML = `
+        🔎 <strong>${article.libelle}</strong><br>
+        <strong>GOLD:</strong> ${article.gold} — <strong>EAN:</strong> ${article.ean}
+      `;
+    } else {
+      infoDiv.innerHTML = '<span style="color:#DA8600;">⚠️ Ce code ne correspond à aucun article 9+1.</span>';
+    }
+  });
+
+
+  let lignesMagasin = [];
+try {
+  lignesMagasin = JSON.parse(localStorage.getItem("lignesMagasin9plus1") || "[]");
+} catch (e) {
+  lignesMagasin = [];
+}
+  let numeroMagasin = "";
+  let encodages = JSON.parse(localStorage.getItem("encodages9plus1") || "[]");
+
+  fichierExcel.addEventListener("change", chargerFichierMagasin);
+
+  codeGoldInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      quantiteInput.focus();
+    }
+  });
+
+  quantiteInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      ajouter();
+    }
+  });
+
+  window.resetTable = function () {
+    if (confirm("Voulez-vous vraiment réinitialiser les données ?")) {
+      localStorage.removeItem("encodages9plus1");
+      encodages = [];
+      lignesMagasin = [];
+      fichierExcel.value = "";
+      rafraichirTableau();
+    
+
+// Vérification avancée : lignes incomplètes ou parasites
+try {
+  const lignesIncompletes = json.slice(10).filter(ligne => {
+    const [societe, magasin, date, commentaire, codeGold, quantite] = ligne;
+    return (
+      (commentaire && !codeGold) ||
+      (codeGold && (!quantite || isNaN(quantite))) ||
+      (ligne.filter(cell => cell?.toString().trim() !== "").length > 0 &&
+       (!societe || !magasin || !codeGold || !quantite))
+    );
+  });
+  if (lignesIncompletes.length > 0) {
+    alert("⚠️ Des lignes incomplètes ou non reconnues ont été trouvées dans le fichier. Une vérification manuelle est recommandée.");
+  }
+} catch (e) {
+  console.warn("Erreur lors de la vérification des lignes incomplètes :", e);
+}
+}
+  };
+
+  function chargerFichierMagasin(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets["9+1"] || workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      numeroMagasin = json[3]?.[1]?.toString().trim() || "";
+      lignesMagasin = [];
+      for (let i = 10; i < json.length; i++) {
+        const ligne = json[i];
+        if (!ligne || ligne[0] === "NOM SOCIETE" || !ligne[4]) continue;
+        lignesMagasin.push({
+          nomSociete: ligne[0] || "",
+          magasin: ligne[1] || "",
+          date: ligne[2] || "",
+          commentaire: ligne[3] || "",
+          code: ligne[4].toString().trim(),
+          quantiteMag: parseInt(ligne[5]) || 0
+        });
+      }
+      rafraichirTableau();
+    
+
+// Vérification avancée : lignes incomplètes ou parasites
+try {
+  const lignesIncompletes = json.slice(10).filter(ligne => {
+    const [societe, magasin, date, commentaire, codeGold, quantite] = ligne;
+    return (
+      (commentaire && !codeGold) ||
+      (codeGold && (!quantite || isNaN(quantite))) ||
+      (ligne.filter(cell => cell?.toString().trim() !== "").length > 0 &&
+       (!societe || !magasin || !codeGold || !quantite))
+    );
+  });
+  if (lignesIncompletes.length > 0) {
+    alert("⚠️ Des lignes incomplètes ou non reconnues ont été trouvées dans le fichier. Une vérification manuelle est recommandée.");
+  }
+} catch (e) {
+  console.warn("Erreur lors de la vérification des lignes incomplètes :", e);
+}
+};
+    reader.readAsArrayBuffer(file);
+  }
+
+  window.ajouter = function () {
+    const codeGold = codeGoldInput.value.trim();
+    let quantite = parseInt(quantiteInput.value);
+    if (!codeGold) {
+      alert("Merci d'importer un fichier magasin et de remplir tous les champs.");
+      return;
+    }
+    if (isNaN(quantite)) {
+      quantite = 1;
+    }
+
+    const dateEncodage = new Date().toLocaleDateString('fr-FR') + ' ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    let existe = false;
+    for (let i = 0; i < encodages.length; i++) {
+      if (encodages[i].magasin === numeroMagasin && encodages[i].codeGold === codeGold) {
+        encodages[i].quantite += quantite;
+        encodages[i].dateEncodage = dateEncodage;
+        existe = true;
+        break;
+      }
+    }
+    const codeExisteDansMagasin = lignesMagasin.some(ligne => ligne.code === codeGold);
+    if (!codeExisteDansMagasin) {
+      alert("⚠️ Ce code n'est pas présent dans le fichier du magasin.");
+    }
+    if (!existe) {
+      encodages.push({ magasin: numeroMagasin || 'Inconnu', codeGold, quantite, dateEncodage });
+    }
+
+    localStorage.setItem("encodages9plus1", JSON.stringify(encodages));
+    rafraichirTableau();
+    
+
+// Vérification avancée : lignes incomplètes ou parasites
+try {
+  const lignesIncompletes = json.slice(10).filter(ligne => {
+    const [societe, magasin, date, commentaire, codeGold, quantite] = ligne;
+    return (
+      (commentaire && !codeGold) ||
+      (codeGold && (!quantite || isNaN(quantite))) ||
+      (ligne.filter(cell => cell?.toString().trim() !== "").length > 0 &&
+       (!societe || !magasin || !codeGold || !quantite))
+    );
+  });
+  if (lignesIncompletes.length > 0) {
+    alert("⚠️ Des lignes incomplètes ou non reconnues ont été trouvées dans le fichier. Une vérification manuelle est recommandée.");
+  }
+} catch (e) {
+  console.warn("Erreur lors de la vérification des lignes incomplètes :", e);
+}
+codeGoldInput.value = "";
+    quantiteInput.value = "";
+    codeGoldInput.focus();
+  };
+
+  function rafraichirTableau() {
+    const tbody = document.querySelector("#tableau tbody");
+    tbody.innerHTML = "";
+    encodages.slice().reverse().forEach((item, reversedIndex) => {
+      const index = encodages.length - 1 - reversedIndex;
+      const row = tbody.insertRow();
+      row.insertCell(0).innerText = item.magasin;
+      const cellCode = row.insertCell(1);
+      const inputCode = document.createElement("input");
+      inputCode.type = "text";
+      inputCode.value = item.codeGold;
+      inputCode.classList.add("table-input");
+      inputCode.addEventListener("change", (e) => {
+        encodages[index].codeGold = e.target.value.trim();
+        localStorage.setItem("encodages9plus1", JSON.stringify(encodages));
+        rafraichirTableau();
+      
+
+// Vérification avancée : lignes incomplètes ou parasites
+try {
+  const lignesIncompletes = json.slice(10).filter(ligne => {
+    const [societe, magasin, date, commentaire, codeGold, quantite] = ligne;
+    return (
+      (commentaire && !codeGold) ||
+      (codeGold && (!quantite || isNaN(quantite))) ||
+      (ligne.filter(cell => cell?.toString().trim() !== "").length > 0 &&
+       (!societe || !magasin || !codeGold || !quantite))
+    );
+  });
+  if (lignesIncompletes.length > 0) {
+    alert("⚠️ Des lignes incomplètes ou non reconnues ont été trouvées dans le fichier. Une vérification manuelle est recommandée.");
+  }
+} catch (e) {
+  console.warn("Erreur lors de la vérification des lignes incomplètes :", e);
+}
+});
+      cellCode.appendChild(inputCode);
+      const cellQte = row.insertCell(2);
+      const inputQte = document.createElement("input");
+      inputQte.type = "number";
+      inputQte.value = item.quantite;
+      inputQte.classList.add("table-input");
+      inputQte.addEventListener("change", (e) => {
+        encodages[index].quantite = parseInt(e.target.value) || 0;
+        localStorage.setItem("encodages9plus1", JSON.stringify(encodages));
+        rafraichirTableau();
+      
+
+// Vérification avancée : lignes incomplètes ou parasites
+try {
+  const lignesIncompletes = json.slice(10).filter(ligne => {
+    const [societe, magasin, date, commentaire, codeGold, quantite] = ligne;
+    return (
+      (commentaire && !codeGold) ||
+      (codeGold && (!quantite || isNaN(quantite))) ||
+      (ligne.filter(cell => cell?.toString().trim() !== "").length > 0 &&
+       (!societe || !magasin || !codeGold || !quantite))
+    );
+  });
+  if (lignesIncompletes.length > 0) {
+    alert("⚠️ Des lignes incomplètes ou non reconnues ont été trouvées dans le fichier. Une vérification manuelle est recommandée.");
+  }
+} catch (e) {
+  console.warn("Erreur lors de la vérification des lignes incomplètes :", e);
+}
+});
+      cellQte.appendChild(inputQte);
+    });
+    localStorage.setItem("lignesMagasin9plus1", JSON.stringify(lignesMagasin));
+    mettreAJourComparaison();
+  }
+
+  function mettreAJourComparaison() {
+    const tbody = document.querySelector("#comparaisonTable tbody");
+    tbody.innerHTML = "";
+    const qteCentralParCode = {};
+    const dateCentralParCode = {};
+    encodages.forEach(e => {
+      if (!qteCentralParCode[e.codeGold]) {
+        qteCentralParCode[e.codeGold] = 0;
+        dateCentralParCode[e.codeGold] = e.dateEncodage;
+      }
+      qteCentralParCode[e.codeGold] += e.quantite;
+    });
+
+    const fusion = {};
+    lignesMagasin.forEach(ligne => {
+      const key = ligne.code;
+      if (!fusion[key]) {
+        fusion[key] = { ...ligne };
+      } else {
+        fusion[key].quantiteMag += ligne.quantiteMag;
+      }
+    });
+
+    Object.values(fusion).forEach(ligne => {
+      const code = ligne.code;
+      const qCentral = qteCentralParCode[code] || 0;
+      const ecart = qCentral - ligne.quantiteMag;
+      const row = tbody.insertRow();
+      if (ecart < 0) {
+  row.className = 'row-red';
+} else if (ecart === 0) {
+  row.className = 'row-green';
+} else {
+  row.style.backgroundColor = '#FFF7CC'; // jaune clair
+  row.style.color = '#0B3948';
+}
+      row.insertCell(0).innerText = ligne.nomSociete;
+      row.insertCell(1).innerText = ligne.magasin;
+      row.insertCell(2).innerText = dateCentralParCode[code] || '';
+      row.insertCell(3).innerText = ligne.commentaire;
+      row.insertCell(4).innerText = code;
+      row.insertCell(5).innerText = ligne.quantiteMag;
+      row.insertCell(6).innerText = qCentral;
+      row.insertCell(7).innerText = ecart;
+      
+      const articleEligible = articlesEligibles.some(a => a.gold === code || a.ean === code);
+      const cellComment = row.insertCell(8);
+
+
+const inputComment = document.createElement("input");
+inputComment.type = "text";
+inputComment.placeholder = "Commentaire central";
+inputComment.setAttribute("list", "suggestionsCommentaire");
+inputComment.style.width = "100%";
+inputComment.style.padding = "6px";
+inputComment.style.borderRadius = "8px";
+inputComment.style.border = "1px solid #ACB0BD";
+inputComment.style.backgroundColor = "#F8FAFC";
+inputComment.style.color = "#0B3948";
+inputComment.style.fontFamily = "'Segoe UI', sans-serif";
+inputComment.style.fontSize = "0.85rem";
+cellComment.appendChild(inputComment);
+
+
+    });
+
+    Object.keys(qteCentralParCode).forEach(code => {
+              if (!fusion[code]) {
+        const qCentral = qteCentralParCode[code];
+        const dateEnc = dateCentralParCode[code];
+        const premier = lignesMagasin[0] || {};
+        const nomSociete = premier.nomSociete || "";
+        const magasin = premier.magasin || numeroMagasin || "";
+        const row = tbody.insertRow();
+        if (qCentral < 0) {
+          row.className = 'row-red';
+        } else if (qCentral === 0) {
+          row.className = 'row-green';
+        } else {
+          row.style.backgroundColor = '#FFF7CC'; // jaune clair
+          row.style.color = '#0B3948';
+        }
+
+        row.insertCell(0).innerText = nomSociete;
+        row.insertCell(1).innerText = magasin;
+        row.insertCell(2).innerText = dateEnc;
+        row.insertCell(3).innerText = '';
+        row.insertCell(4).innerText = code;
+        row.insertCell(5).innerText = 0;
+        row.insertCell(6).innerText = qCentral;
+        row.insertCell(7).innerText = qCentral;
+        
+      const articleEligible = articlesEligibles.some(a => a.gold === code || a.ean === code);
+      const cellComment = row.insertCell(8);
+
+
+const inputComment = document.createElement("input");
+inputComment.type = "text";
+inputComment.placeholder = "Commentaire central";
+inputComment.setAttribute("list", "suggestionsCommentaire");
+inputComment.style.width = "100%";
+inputComment.style.padding = "6px";
+inputComment.style.borderRadius = "8px";
+inputComment.style.border = "1px solid #ACB0BD";
+inputComment.style.backgroundColor = "#F8FAFC";
+inputComment.style.color = "#0B3948";
+inputComment.style.fontFamily = "'Segoe UI', sans-serif";
+inputComment.style.fontSize = "0.85rem";
+cellComment.appendChild(inputComment);
+
+
+      }
+    });
+
+    const lignes = document.querySelectorAll("#comparaisonTable tbody tr");
+    let total = 0;
+    let positifs = 0;
+    let lignesManquantes = 0;
+    let articlesManquants = 0;
+
+    lignes.forEach(row => {
+      const ecart = parseInt(row.cells[7]?.innerText || "0");
+      if (!isNaN(ecart)) {
+        total++;
+        if (ecart >= 0) positifs++;
+        if (ecart < 0) {
+          lignesManquantes++;
+          articlesManquants += Math.abs(ecart);
+        }
+      }
+    });
+
+    const pourcentage = total > 0 ? Math.round((positifs / total) * 100) : 0;
+    document.getElementById("pourcentagePositif").innerText = pourcentage + " %";
+    document.getElementById("lignesManquantes").innerText = lignesManquantes;
+    document.getElementById("articlesManquants").innerText = articlesManquants;
+  }
+
+  window.enregistrerEncodage = function () {
+    const historique = JSON.parse(localStorage.getItem("historique9plus1") || "[]");
+    const lignesComparaison = document.querySelectorAll("#comparaisonTable tbody tr");
+    lignesComparaison.forEach(row => {
+      const cells = row.querySelectorAll("td");
+      const commentaireInput = cells[8]?.querySelector("input");
+      historique.push({
+        nomSociete: cells[0].innerText.trim(),
+        magasin: cells[1].innerText.trim(),
+        date: cells[2].innerText.trim(),
+        commentaire: cells[3].innerText.trim(),
+        code: cells[4].innerText.trim(),
+        quantiteMag: parseInt(cells[5].innerText.trim()) || 0,
+        quantiteCentral: parseInt(cells[6].innerText.trim()) || 0,
+        ecart: parseInt(cells[7].innerText.trim()) || 0,
+        commentaireCentral: commentaireInput ? commentaireInput.value.trim() : '',
+        dateEncodage: new Date().toISOString()
+      });
+    });
+    localStorage.setItem("historique9plus1", JSON.stringify(historique));
+    alert("Encodage enregistré dans l'historique.");
+
+    // Générer et télécharger automatiquement un fichier Excel
+    const exportData = Array.from(document.querySelectorAll("#comparaisonTable tbody tr")).map(row => {
+      const cells = row.querySelectorAll("td");
+      return {
+        "Nom société": cells[0].innerText,
+        "Magasin": cells[1].innerText,
+        "Date encodage": cells[2].innerText,
+        "Commentaire": cells[3].innerText,
+        "Code Gold": cells[4].innerText,
+        "Qté magasin": cells[5].innerText,
+        "Qté central": cells[6].innerText,
+        "Écart": cells[7].innerText,
+        "Commentaire central": cells[8].querySelector("input")?.value || ""
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Comparaison");
+    const nomFichier = `${exportData[0]["Magasin"]}_${new Date().toLocaleDateString("fr-FR").replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(wb, nomFichier);
+
+    if (confirm("Souhaitez-vous commencer un nouvel encodage ?")) {
+      localStorage.removeItem("encodages9plus1");
+      encodages = [];
+      lignesMagasin = [];
+      fichierExcel.value = '';
+      rafraichirTableau();
+    
+
+// Vérification avancée : lignes incomplètes ou parasites
+try {
+  const lignesIncompletes = json.slice(10).filter(ligne => {
+    const [societe, magasin, date, commentaire, codeGold, quantite] = ligne;
+    return (
+      (commentaire && !codeGold) ||
+      (codeGold && (!quantite || isNaN(quantite))) ||
+      (ligne.filter(cell => cell?.toString().trim() !== "").length > 0 &&
+       (!societe || !magasin || !codeGold || !quantite))
+    );
+  });
+  if (lignesIncompletes.length > 0) {
+    alert("⚠️ Des lignes incomplètes ou non reconnues ont été trouvées dans le fichier. Une vérification manuelle est recommandée.");
+  }
+} catch (e) {
+  console.warn("Erreur lors de la vérification des lignes incomplètes :", e);
+}
+}
+  };
+});
+
+  
+window.modifierInfosMagasin = function () {
+  const nouveauNom = prompt("Entrez le nouveau nom de société :");
+  const nouveauMagasin = prompt("Entrez le nouveau numéro de magasin :");
+
+  if (!nouveauNom || !nouveauMagasin) {
+    alert("Champs manquants. Aucune modification effectuée.");
+    return;
+  }
+
+  const rows = document.querySelectorAll("#comparaisonTable tbody tr");
+  rows.forEach(row => {
+    row.cells[0].innerText = nouveauNom;
+    row.cells[1].innerText = nouveauMagasin;
+  });
+
+  alert("Champs visuels mis à jour. Cliquez sur 💾 Enregistrer pour sauvegarder.");
+};
+
+
+
+
+window.ouvrirRechercheArticle = function () {
+  articlesEligibles = JSON.parse(localStorage.getItem("articlesEligibles9plus1") || "[]");
+
+  const popup = document.getElementById("popupRecherche");
+  const tbody = document.querySelector("#tableRecherche tbody");
+  const champRecherche = document.getElementById("champRecherche");
+
+  if (!articlesEligibles || articlesEligibles.length === 0) {
+    alert("Veuillez d'abord importer la liste des articles 9+1.");
+    return;
+  }
+
+  popup.style.display = "block";
+  tbody.innerHTML = "";
+
+  const thead = document.querySelector("#tableRecherche thead");
+  thead.innerHTML = `
+    <tr>
+      <th>GOLD</th><th>EAN</th><th>Libellé</th><th>Marque</th><th>PG</th><th>Catégorie</th><th>Poids</th>
+    </tr>
+    <tr>
+      <th><input type='text' id='filtre_gold' placeholder='Filtrer GOLD' style='width:95%;'></th>
+      <th><input type='text' id='filtre_ean' placeholder='Filtrer EAN' style='width:95%;'></th>
+      <th><input type='text' id='filtre_libelle' placeholder='Filtrer Libellé' style='width:95%;'></th>
+      <th><input type='text' id='filtre_marque' placeholder='Filtrer Marque' style='width:95%;'></th>
+      <th><input type='text' id='filtre_pg' placeholder='Filtrer PG' style='width:95%;'></th>
+      <th><input type='text' id='filtre_category' placeholder='Filtrer Catégorie' style='width:95%;'></th>
+      <th><input type='text' id='filtre_poids' placeholder='Filtrer Poids' style='width:95%;'></th>
+    </tr>
+  `;
+
+  function filtreParColonne() {
+    const filtre_gold = document.getElementById("filtre_gold").value.toLowerCase();
+    const filtre_ean = document.getElementById("filtre_ean").value.toLowerCase();
+    const filtre_libelle = document.getElementById("filtre_libelle").value.toLowerCase();
+    const filtre_marque = document.getElementById("filtre_marque").value.toLowerCase();
+    const filtre_pg = document.getElementById("filtre_pg").value.toLowerCase();
+    const filtre_category = document.getElementById("filtre_category").value.toLowerCase();
+    const filtre_poids = document.getElementById("filtre_poids").value.toLowerCase();
+
+    const resultats = articlesEligibles.filter(article =>
+      article.gold?.toLowerCase().includes(filtre_gold) &&
+      article.ean?.toLowerCase().includes(filtre_ean) &&
+      article.libelle?.toLowerCase().includes(filtre_libelle) &&
+      article.marque?.toLowerCase().includes(filtre_marque) &&
+      article.pg?.toLowerCase().includes(filtre_pg) &&
+      article.category?.toLowerCase().includes(filtre_category) &&
+      article.poids?.toLowerCase().includes(filtre_poids)
+    );
+
+    tbody.innerHTML = "";
+    resultats.forEach(article => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${article.gold}</td><td>${article.ean}</td><td>${article.libelle}</td>
+        <td>${article.marque}</td><td>${article.pg}</td><td>${article.category}</td><td>${article.poids}</td>
+      `;
+      row.style.cursor = "pointer";
+      row.addEventListener("click", () => {
+        document.getElementById("codeGold").value = article.gold;
+        document.getElementById("infoArticle").innerHTML = `
+          🔎 <strong>${article.libelle}</strong><br>
+          <strong>GOLD:</strong> ${article.gold} — <strong>EAN:</strong> ${article.ean}<br>
+          <strong>Marque:</strong> ${article.marque} — <strong>Poids:</strong> ${article.poids}
+        `;
+        popup.style.display = "none";
+      });
+      tbody.appendChild(row);
+    });
+  }
+
+  document.getElementById("filtre_gold").addEventListener("input", filtreParColonne);
+  document.getElementById("filtre_ean").addEventListener("input", filtreParColonne);
+  document.getElementById("filtre_libelle").addEventListener("input", filtreParColonne);
+  document.getElementById("filtre_marque").addEventListener("input", filtreParColonne);
+  document.getElementById("filtre_pg").addEventListener("input", filtreParColonne);
+  document.getElementById("filtre_category").addEventListener("input", filtreParColonne);
+  document.getElementById("filtre_poids").addEventListener("input", filtreParColonne);
+};
+
+window.fermerRechercheArticle = function () {
+  document.getElementById("popupRecherche").style.display = "none";
+};
+
+</script>
+<div id="popupRecherche" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%);
+ z-index:9999; background:white; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.2); padding:20px; width:80%; max-height:80%; overflow:auto;">
+<h3 style="margin-top:0;">🔍 Recherche d'article</h3>
+<input id="champRecherche" placeholder="Recherchez par GOLD, EAN, libellé…" style="width:100%; padding:10px; margin-bottom:10px;" type="text"/>
+<table id="tableRecherche" style="width:100%; border-collapse:collapse;">
+<thead>
+<tr>
+<th>GOLD</th><th>EAN</th><th>Libellé</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<button onclick="fermerRechercheArticle()" style="margin-top:10px;">❌ Fermer</button>
+</div>
+<script>
+// Gestion du numéro de magasin : via fichier ou via URL
+let numeroMagasin = '';
+const params = new URLSearchParams(window.location.search);
+document.addEventListener("DOMContentLoaded", () => {
+  const magasinInput = document.querySelector('input[name="magasin"]');
+  if (magasinInput) {
+    if (params.has("magasin")) {
+      magasinInput.value = params.get("magasin");
+    }
+    // Pré-remplir la variable si aucun fichier chargé
+    numeroMagasin = magasinInput.value.trim();
+  }
+});
+</script>
+<datalist id="suggestionsCommentaire">
+<option value="Moins de 10 tickets par cartes / Minder dan 10 ticketten per kaart">
+<option value="Pas de ticket offert / Geen ticket aangeboden">
+<option value="Ticket offert avant 2021 / Ticket aangeboden vóór 2021">
+<option value="N° Gold pas communiqué / Gold nummer niet meegedeeld">
+<option value="Carte manquante (Pas trouvée) / Ontbrekende kaart (Niet gevonden)">
+<option value="Carte en plus / Extra kaart">
+</option></option></option></option></option></option></datalist>
+
+<!-- SCRIPT GOOGLE SHEETS -->
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+  const CLIENT_ID = "452895010434-nurhq0qpabq3eqidtpp1l7ji45ltfe7n.apps.googleusercontent.com";
+  const DISCOVERY_DOC = "https://sheets.googleapis.com/$discovery/rest?version=v4";
+  const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
+  const SPREADSHEET_ID = "1hTIelvuuIY4woCbRjVRGhkTaRrnSuCVk3iqWkJnpBCk";
+  const SHEET_NAME = "Feuille1";
+
+  let googleAuthInstance;
+
+  function initGoogleClient() {
+    gapi.load("client:auth2", () => {
+      gapi.client.init({
+        clientId: CLIENT_ID,
+        discoveryDocs: [DISCOVERY_DOC],
+        scope: SCOPES
+      }).then(() => {
+        googleAuthInstance = gapi.auth2.getAuthInstance();
+      });
+    });
+  }
+
+  function enregistrerDansGoogleSheets(data) {
+    if (!googleAuthInstance || !googleAuthInstance.isSignedIn.get()) {
+      return googleAuthInstance.signIn().then(() => enregistrerDansGoogleSheets(data));
+    }
+
+    const values = data.map(row => [
+      row.date || "",
+      row.nomSociete || "",
+      row.magasin || "",
+      row.code || "",
+      row.qteMagasin || "",
+      row.qteCentral || "",
+      row.ecart || "",
+      row.commentaire || ""
+    ]);
+
+    return gapi.client.sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: SHEET_NAME,
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      resource: { values: values }
+    });
+  }
+
+  // Exemple d'appel dans ton code :
+  // enregistrerDansGoogleSheets([{date: "2024-04-12", nomSociete: "Tom&Co", ...}]);
+
+  initGoogleClient();
+</script>
+
+</body>
+</html>
