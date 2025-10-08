@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tom&Co Academy · LMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/tomco_lms.css" />
+  </head>
+  <body>
+    <div id="authScreen" class="auth-screen">
+      <div class="auth-card">
+        <div class="brand">
+          <div class="brand-logo">T&C</div>
+          <div>
+            <h1>Tom&amp;Co Academy</h1>
+            <p>Plateforme de formation continue</p>
+          </div>
+        </div>
+        <form id="loginForm" class="stack-md">
+          <div class="form-field">
+            <label for="loginEmail">Adresse e-mail</label>
+            <input type="email" id="loginEmail" required />
+          </div>
+          <div class="form-field">
+            <label for="loginPassword">Mot de passe</label>
+            <input type="password" id="loginPassword" required />
+          </div>
+          <button type="submit" class="btn primary">Se connecter</button>
+          <p class="muted">Accès réservé aux collaborateurs Tom&amp;Co.</p>
+          <details class="demo-details">
+            <summary>Accès de démonstration</summary>
+            <ul>
+              <li><strong>Admin :</strong> admin@tomco.eu / admin123</li>
+              <li><strong>Formateur :</strong> formatrice@tomco.eu / welcome1</li>
+              <li><strong>Apprenant :</strong> jean.dupont@tomco.eu / welcome1</li>
+            </ul>
+          </details>
+        </form>
+      </div>
+    </div>
+
+    <div id="appShell" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="brand-logo brand-logo--small">T&amp;C</div>
+          <div>
+            <h2>Tom&amp;Co Academy</h2>
+            <p>Gestion LMS</p>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <button class="nav-link active" data-target="dashboard">Tableau de bord</button>
+          <button class="nav-link" data-target="courses">Formations</button>
+          <button class="nav-link" data-target="groups">Groupes</button>
+          <button class="nav-link" data-target="stores">Magasins</button>
+          <button class="nav-link" data-target="users">Utilisateurs</button>
+          <button class="nav-link" data-target="reports">Rapports</button>
+          <button class="nav-link" data-target="settings">Paramètres</button>
+        </nav>
+        <button id="logoutBtn" class="btn ghost">Se déconnecter</button>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1 id="viewTitle">Tableau de bord</h1>
+            <p class="muted">Pilotez l'expérience apprenante de Tom&amp;Co</p>
+          </div>
+          <div class="topbar-actions">
+            <div class="search-field">
+              <span aria-hidden="true">🔍</span>
+              <input type="search" id="globalSearch" placeholder="Rechercher..." />
+            </div>
+            <div class="user-chip" id="activeUserChip"></div>
+          </div>
+        </header>
+
+        <section id="dashboard" class="view active">
+          <div class="grid grid--stats">
+            <article class="card stat-card">
+              <h3>Formations SCORM</h3>
+              <p class="stat-value" id="statCourses">0</p>
+              <p class="muted">Paquets SCORM actifs dans la bibliothèque</p>
+            </article>
+            <article class="card stat-card">
+              <h3>Groupes d'apprenants</h3>
+              <p class="stat-value" id="statGroups">0</p>
+              <p class="muted">Equipes commerciales et magasins</p>
+            </article>
+            <article class="card stat-card">
+              <h3>Magasins</h3>
+              <p class="stat-value" id="statStores">0</p>
+              <p class="muted">Points de vente Tom&amp;Co connectés</p>
+            </article>
+            <article class="card stat-card">
+              <h3>Utilisateurs</h3>
+              <p class="stat-value" id="statUsers">0</p>
+              <p class="muted">Collaborateurs actifs sur la plateforme</p>
+            </article>
+          </div>
+
+          <div class="grid">
+            <article class="card">
+              <header class="card-header">
+                <h3>Activité récente</h3>
+              </header>
+              <ul id="activityFeed" class="timeline"></ul>
+            </article>
+            <article class="card">
+              <header class="card-header">
+                <h3>Progression des groupes</h3>
+              </header>
+              <div id="groupProgress" class="progress-list"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="courses" class="view">
+          <div class="section-header">
+            <h2>Bibliothèque SCORM</h2>
+            <button class="btn primary" data-toggle-form="course">Nouvelle formation</button>
+          </div>
+          <form id="courseForm" class="card form-card" data-form="course">
+            <div class="grid grid--form">
+              <div class="form-field">
+                <label for="courseTitle">Titre</label>
+                <input type="text" id="courseTitle" required />
+              </div>
+              <div class="form-field">
+                <label for="courseCategory">Catégorie</label>
+                <input type="text" id="courseCategory" placeholder="Ex. Commerce, Produits frais" />
+              </div>
+              <div class="form-field">
+                <label for="courseScorm">Version SCORM</label>
+                <select id="courseScorm">
+                  <option value="1.2">SCORM 1.2</option>
+                  <option value="2004">SCORM 2004</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="courseDuration">Durée estimée (min)</label>
+                <input type="number" id="courseDuration" min="5" step="5" />
+              </div>
+              <div class="form-field">
+                <label for="courseLaunchUrl">URL de lancement</label>
+                <input type="url" id="courseLaunchUrl" placeholder="https://" />
+              </div>
+              <div class="form-field">
+                <label for="coursePackage">Paquet SCORM</label>
+                <input type="file" id="coursePackage" accept=".zip" />
+                <p class="hint">Ajoutez votre archive SCORM .zip (stockage local uniquement)</p>
+              </div>
+              <div class="form-field form-field--full">
+                <label for="courseDescription">Description</label>
+                <textarea id="courseDescription" rows="3"></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn primary">Enregistrer la formation</button>
+          </form>
+          <div class="card">
+            <header class="card-header">
+              <h3>Formations enregistrées</h3>
+              <span id="coursesCount" class="badge">0</span>
+            </header>
+            <table class="data-table" id="coursesTable">
+              <thead>
+                <tr>
+                  <th>Titre</th>
+                  <th>Catégorie</th>
+                  <th>Version</th>
+                  <th>Durée</th>
+                  <th>Assignée à</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="groups" class="view">
+          <div class="section-header">
+            <h2>Groupes d'apprenants</h2>
+            <button class="btn primary" data-toggle-form="group">Créer un groupe</button>
+          </div>
+          <form id="groupForm" class="card form-card" data-form="group">
+            <div class="grid grid--form">
+              <div class="form-field">
+                <label for="groupName">Nom du groupe</label>
+                <input type="text" id="groupName" required />
+              </div>
+              <div class="form-field">
+                <label for="groupStore">Magasin rattaché</label>
+                <select id="groupStore"></select>
+              </div>
+              <div class="form-field form-field--full">
+                <label for="groupDescription">Description</label>
+                <textarea id="groupDescription" rows="2" placeholder="Objectif pédagogique, public..."></textarea>
+              </div>
+              <div class="form-field form-field--full">
+                <label for="groupCourses">Formations assignées</label>
+                <select id="groupCourses" multiple size="4"></select>
+              </div>
+            </div>
+            <button type="submit" class="btn primary">Enregistrer le groupe</button>
+          </form>
+          <div class="card">
+            <header class="card-header">
+              <h3>Groupes actifs</h3>
+              <span id="groupsCount" class="badge">0</span>
+            </header>
+            <table class="data-table" id="groupsTable">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Magasin</th>
+                  <th>Formations</th>
+                  <th>Apprenants</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="stores" class="view">
+          <div class="section-header">
+            <h2>Magasins Tom&amp;Co</h2>
+            <button class="btn primary" data-toggle-form="store">Ajouter un magasin</button>
+          </div>
+          <form id="storeForm" class="card form-card" data-form="store">
+            <div class="grid grid--form">
+              <div class="form-field">
+                <label for="storeName">Nom du magasin</label>
+                <input type="text" id="storeName" required />
+              </div>
+              <div class="form-field">
+                <label for="storeCity">Ville</label>
+                <input type="text" id="storeCity" />
+              </div>
+              <div class="form-field">
+                <label for="storeManager">Manager</label>
+                <input type="text" id="storeManager" />
+              </div>
+              <div class="form-field form-field--full">
+                <label for="storeNotes">Notes internes</label>
+                <textarea id="storeNotes" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn primary">Enregistrer le magasin</button>
+          </form>
+          <div class="card">
+            <header class="card-header">
+              <h3>Liste des magasins</h3>
+              <span id="storesCount" class="badge">0</span>
+            </header>
+            <table class="data-table" id="storesTable">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Ville</th>
+                  <th>Manager</th>
+                  <th>Groupes</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="users" class="view">
+          <div class="section-header">
+            <h2>Utilisateurs</h2>
+            <button class="btn primary" data-toggle-form="user">Nouvel utilisateur</button>
+          </div>
+          <form id="userForm" class="card form-card" data-form="user">
+            <div class="grid grid--form">
+              <div class="form-field">
+                <label for="userFirstName">Prénom</label>
+                <input type="text" id="userFirstName" required />
+              </div>
+              <div class="form-field">
+                <label for="userLastName">Nom</label>
+                <input type="text" id="userLastName" required />
+              </div>
+              <div class="form-field">
+                <label for="userEmail">Email professionnel</label>
+                <input type="email" id="userEmail" required />
+              </div>
+              <div class="form-field">
+                <label for="userRole">Rôle</label>
+                <select id="userRole">
+                  <option value="Administrateur">Administrateur</option>
+                  <option value="Formateur">Formateur</option>
+                  <option value="Apprenant">Apprenant</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="userPassword">Mot de passe</label>
+                <input type="password" id="userPassword" required />
+              </div>
+              <div class="form-field">
+                <label for="userStore">Magasin</label>
+                <select id="userStore"></select>
+              </div>
+              <div class="form-field">
+                <label for="userGroup">Groupe</label>
+                <select id="userGroup"></select>
+              </div>
+            </div>
+            <button type="submit" class="btn primary">Créer l'utilisateur</button>
+          </form>
+          <div class="card">
+            <header class="card-header">
+              <h3>Collaborateurs actifs</h3>
+              <span id="usersCount" class="badge">0</span>
+            </header>
+            <table class="data-table" id="usersTable">
+              <thead>
+                <tr>
+                  <th>Utilisateur</th>
+                  <th>Rôle</th>
+                  <th>Magasin</th>
+                  <th>Groupe</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="reports" class="view">
+          <div class="grid">
+            <article class="card">
+              <header class="card-header">
+                <h3>Assignations par groupe</h3>
+              </header>
+              <div id="reportAssignments" class="report-grid"></div>
+            </article>
+            <article class="card">
+              <header class="card-header">
+                <h3>Taux d'avancement simulé</h3>
+              </header>
+              <div id="reportProgress" class="report-grid"></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="settings" class="view">
+          <article class="card">
+            <header class="card-header">
+              <h3>Paramètres de la plateforme</h3>
+            </header>
+            <div class="stack-md">
+              <div class="form-field">
+                <label for="settingBrandColor">Couleur principale</label>
+                <input type="color" id="settingBrandColor" value="#ff6f3c" />
+              </div>
+              <div class="form-field">
+                <label for="settingReset">Réinitialiser les données de démonstration</label>
+                <button id="resetDemo" class="btn danger">Réinitialiser</button>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <template id="timelineItemTemplate">
+      <li class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div>
+          <p class="timeline-title"></p>
+          <p class="timeline-meta muted"></p>
+        </div>
+      </li>
+    </template>
+
+    <template id="progressItemTemplate">
+      <div class="progress-item">
+        <div class="progress-header">
+          <strong class="progress-name"></strong>
+          <span class="progress-value"></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+      </div>
+    </template>
+
+    <script src="assets/js/tomco_lms.js" defer></script>
+  </body>
+</html>
